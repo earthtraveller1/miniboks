@@ -8,60 +8,154 @@ import rl "vendor:raylib"
 UNIT_SPRITE_SIZE :: 64
 
 Sprite :: struct {
-    position: rl.Vector2,
-    texture: rl.Texture
+	position: rl.Vector2,
+	texture:  rl.Texture,
 }
 
-new_sprite :: proc(x: f32, y: f32, texture_path: cstring) -> Sprite {
-    return Sprite {
-        position = { x, y },
-        texture = rl.LoadTexture(texture_path)
-    }
+new_sprite :: proc(x: f32, y: f32, texture: rl.Texture) -> Sprite {
+	return Sprite{position = {x, y}, texture = texture}
 }
 
 render_sprite :: proc(sprite: ^Sprite) {
-    rl.DrawTextureV(sprite.texture, sprite.position, rl.WHITE)
+	rl.DrawTextureV(sprite.texture, sprite.position, rl.WHITE)
 }
 
 resize_sprite :: proc(sprite: ^Sprite, newWidth: i32, newHeight: i32) {
-    sprite.texture.width = newWidth
-    sprite.texture.height = newHeight
+	sprite.texture.width = newWidth
+	sprite.texture.height = newHeight
+}
+
+Assets :: struct {
+	floor_texture:        rl.Texture,
+	crate_texture:        rl.Texture,
+	player_texture:       rl.Texture,
+	player_up_texture:    rl.Texture,
+	player_down_texture:  rl.Texture,
+	player_left_texture:  rl.Texture,
+	player_right_texture: rl.Texture,
+}
+
+load_assets :: proc() -> Assets {
+	return Assets {
+		floor_texture = rl.LoadTexture("assets/floor.png"),
+		crate_texture = rl.LoadTexture("assets/crate.png"),
+		player_texture = rl.LoadTexture("assets/player.png"),
+		player_up_texture = rl.LoadTexture("assets/player-up.png"),
+		player_down_texture = rl.LoadTexture("assets/player-down.png"),
+		player_left_texture = rl.LoadTexture("assets/player-left.png"),
+		player_right_texture = rl.LoadTexture("assets/player-right.png"),
+	}
+}
+
+Direction :: enum {
+	NEUTRAL,
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT,
+}
+
+Player :: struct {
+	sprite:    Sprite,
+	textures:  struct {
+		neutral: rl.Texture,
+		up:      rl.Texture,
+		down:    rl.Texture,
+		right:   rl.Texture,
+		left:    rl.Texture,
+	},
+}
+
+new_player :: proc(start_x: f32, start_y: f32, assets: ^Assets) -> Player {
+    sprite := Sprite{position = {start_x, start_y}, texture = assets.player_texture}
+    resize_sprite(&sprite, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
+
+	player := Player {
+		sprite = sprite,
+		textures = {
+			neutral = assets.player_texture,
+			up = assets.player_up_texture,
+			down = assets.player_down_texture,
+			right = assets.player_right_texture,
+			left = assets.player_left_texture,
+		},
+	}
+
+    player.textures.neutral.width = UNIT_SPRITE_SIZE
+    player.textures.neutral.height = UNIT_SPRITE_SIZE
+    player.textures.up.width = UNIT_SPRITE_SIZE
+    player.textures.up.height = UNIT_SPRITE_SIZE
+    player.textures.down.width = UNIT_SPRITE_SIZE
+    player.textures.down.height = UNIT_SPRITE_SIZE
+    player.textures.right.width = UNIT_SPRITE_SIZE
+    player.textures.right.height = UNIT_SPRITE_SIZE
+    player.textures.left.width = UNIT_SPRITE_SIZE
+    player.textures.left.height = UNIT_SPRITE_SIZE
+
+    return player
+}
+
+move_player :: proc(player: ^Player, direction: Direction) {
+	using player.sprite
+    using player
+
+	switch direction {
+	case .UP:
+		position.y -= f32(texture.height)
+        texture = textures.up
+	case .DOWN:
+		position.y += f32(texture.height)
+        texture = textures.down
+	case .LEFT:
+		position.x -= f32(texture.width)
+        texture = textures.left
+	case .RIGHT:
+		position.x += f32(texture.width)
+        texture = textures.right
+	case .NEUTRAL:
+        texture = textures.neutral
+	}
+}
+
+render_player :: proc(player: ^Player) {
+    render_sprite(&player.sprite)
 }
 
 main :: proc() {
-    rl.InitWindow(1280, 1024, "Game")
-    defer rl.CloseWindow()
-    rl.SetTargetFPS(60)
+	rl.InitWindow(1280, 1024, "Game")
+	defer rl.CloseWindow()
+	rl.SetTargetFPS(60)
 
-    floor := new_sprite((1280 - 1024) / 2, 0, "assets/floor.png")
-    resize_sprite(&floor, 1024, 1024)
+	assets := load_assets()
 
-    player := new_sprite(512, 512, "assets/player.png")
-    resize_sprite(&player, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
+	floor := new_sprite((1280 - 1024) / 2, 0, assets.floor_texture)
+	resize_sprite(&floor, 1024, 1024)
 
-    for !rl.WindowShouldClose() {
-        if rl.IsKeyPressed(.UP) {
-            player.position.y -= UNIT_SPRITE_SIZE
-        }
+    player := new_player(512, 512, &assets)
 
-        if rl.IsKeyPressed(.DOWN) {
-            player.position.y += UNIT_SPRITE_SIZE
-        }
+	for !rl.WindowShouldClose() {
+		if rl.IsKeyPressed(.UP) {
+            move_player(&player, .UP)
+		}
 
-        if rl.IsKeyPressed(.RIGHT) {
-            player.position.x += UNIT_SPRITE_SIZE
-        }
+		if rl.IsKeyPressed(.DOWN) {
+            move_player(&player, .DOWN)
+		}
 
-        if rl.IsKeyPressed(.LEFT) {
-            player.position.x -= UNIT_SPRITE_SIZE
-        }
+		if rl.IsKeyPressed(.RIGHT) {
+            move_player(&player, .RIGHT)
+		}
 
-        rl.BeginDrawing()
-        rl.ClearBackground({ 165, 126, 85, 255 })
+		if rl.IsKeyPressed(.LEFT) {
+            move_player(&player, .LEFT)
+		}
 
-        render_sprite(&floor)
-        render_sprite(&player)
+		rl.BeginDrawing()
+		rl.ClearBackground({165, 126, 85, 255})
 
-        rl.EndDrawing()
-    }
+		render_sprite(&floor)
+		render_player(&player)
+
+		rl.EndDrawing()
+	}
 }
