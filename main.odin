@@ -6,6 +6,8 @@ import "core:strings"
 import rl "vendor:raylib"
 
 UNIT_SPRITE_SIZE :: 64
+WINDOW_WIDTH :: 1280
+WINDOW_HEIGHT :: 1024
 
 Sprite :: struct {
 	position: rl.Vector2,
@@ -144,8 +146,8 @@ move_player :: proc(player: ^Player, direction: Direction, moveable_sprites: []S
 
 	if !is_sprite_present(position + position_change, moveable_sprites) ||
 	   !is_sprite_present(position + position_change * 2, moveable_sprites) {
-        position += position_change
-        apply_pushes(&sprite, old_position, moveable_sprites[:])
+		position += position_change
+		apply_pushes(&sprite, old_position, moveable_sprites[:])
 	}
 }
 
@@ -154,13 +156,13 @@ render_player :: proc(player: ^Player) {
 }
 
 main :: proc() {
-	rl.InitWindow(1280, 1024, "Game")
+	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Game")
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
 	assets := load_assets()
 
-	floor := new_sprite((1280 - 1024) / 2, 0, assets.floor_texture)
+	floor := new_sprite((WINDOW_WIDTH - 1024) / 2, 0, assets.floor_texture)
 	resize_sprite(&floor, 1024, 1024)
 
 	player := new_player(512, 512, &assets)
@@ -177,6 +179,12 @@ main :: proc() {
 		resize_sprite(&crate, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
 	}
 
+	camera := rl.Camera2D {
+		target   = {0, 0},
+		offset   = {0, 0},
+		rotation = 0.0,
+		zoom     = 1.0,
+	}
 
 	for !rl.WindowShouldClose() {
 		if rl.IsKeyPressed(.UP) {
@@ -198,6 +206,8 @@ main :: proc() {
 		rl.BeginDrawing()
 		rl.ClearBackground({165, 126, 85, 255})
 
+        rl.BeginMode2D(camera)
+
 		render_sprite(&floor)
 		render_player(&player)
 
@@ -205,6 +215,7 @@ main :: proc() {
 			render_sprite(&crate)
 		}
 
+        rl.EndMode2D()
 		rl.EndDrawing()
 	}
 }
