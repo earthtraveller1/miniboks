@@ -133,6 +133,19 @@ main :: proc() {
 
     player := new_player(512, 512, &assets)
 
+    crates: [5]Sprite = {
+        new_sprite(UNIT_SPRITE_SIZE * 2, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
+        new_sprite(UNIT_SPRITE_SIZE * 3, UNIT_SPRITE_SIZE * 6, assets.crate_texture),
+        new_sprite(UNIT_SPRITE_SIZE * 5, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
+        new_sprite(UNIT_SPRITE_SIZE * 1, UNIT_SPRITE_SIZE * 8, assets.crate_texture),
+        new_sprite(UNIT_SPRITE_SIZE * 4, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
+    }
+
+    for &crate in crates {
+        resize_sprite(&crate, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
+    }
+
+
 	for !rl.WindowShouldClose() {
 		if rl.IsKeyPressed(.UP) {
             move_player(&player, .UP)
@@ -155,6 +168,10 @@ main :: proc() {
 
 		render_sprite(&floor)
 		render_player(&player)
+
+        for &crate in crates {
+            render_sprite(&crate)
+        }
 
 		rl.EndDrawing()
 	}
