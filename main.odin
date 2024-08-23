@@ -56,8 +56,8 @@ Direction :: enum {
 }
 
 Player :: struct {
-	sprite:    Sprite,
-	textures:  struct {
+	sprite:   Sprite,
+	textures: struct {
 		neutral: rl.Texture,
 		up:      rl.Texture,
 		down:    rl.Texture,
@@ -67,8 +67,11 @@ Player :: struct {
 }
 
 new_player :: proc(start_x: f32, start_y: f32, assets: ^Assets) -> Player {
-    sprite := Sprite{position = {start_x, start_y}, texture = assets.player_texture}
-    resize_sprite(&sprite, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
+	sprite := Sprite {
+		position = {start_x, start_y},
+		texture  = assets.player_texture,
+	}
+	resize_sprite(&sprite, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
 
 	player := Player {
 		sprite = sprite,
@@ -81,44 +84,73 @@ new_player :: proc(start_x: f32, start_y: f32, assets: ^Assets) -> Player {
 		},
 	}
 
-    player.textures.neutral.width = UNIT_SPRITE_SIZE
-    player.textures.neutral.height = UNIT_SPRITE_SIZE
-    player.textures.up.width = UNIT_SPRITE_SIZE
-    player.textures.up.height = UNIT_SPRITE_SIZE
-    player.textures.down.width = UNIT_SPRITE_SIZE
-    player.textures.down.height = UNIT_SPRITE_SIZE
-    player.textures.right.width = UNIT_SPRITE_SIZE
-    player.textures.right.height = UNIT_SPRITE_SIZE
-    player.textures.left.width = UNIT_SPRITE_SIZE
-    player.textures.left.height = UNIT_SPRITE_SIZE
+	player.textures.neutral.width = UNIT_SPRITE_SIZE
+	player.textures.neutral.height = UNIT_SPRITE_SIZE
+	player.textures.up.width = UNIT_SPRITE_SIZE
+	player.textures.up.height = UNIT_SPRITE_SIZE
+	player.textures.down.width = UNIT_SPRITE_SIZE
+	player.textures.down.height = UNIT_SPRITE_SIZE
+	player.textures.right.width = UNIT_SPRITE_SIZE
+	player.textures.right.height = UNIT_SPRITE_SIZE
+	player.textures.left.width = UNIT_SPRITE_SIZE
+	player.textures.left.height = UNIT_SPRITE_SIZE
 
-    return player
+	return player
 }
 
-move_player :: proc(player: ^Player, direction: Direction) {
+apply_pushes :: proc(sprite: ^Sprite, old_position: rl.Vector2, pushables: []Sprite) {
+	position_delta := old_position - sprite.position
+
+	for &pushable in pushables {
+		if pushable.position == sprite.position {
+			pushable.position -= position_delta
+		}
+	}
+}
+
+is_sprite_present :: proc(position: rl.Vector2, sprites: []Sprite) -> bool {
+	for sprite in sprites {
+		if sprite.position == position {
+			return true
+		}
+	}
+
+	return false
+}
+
+move_player :: proc(player: ^Player, direction: Direction, moveable_sprites: []Sprite) {
 	using player.sprite
-    using player
+	using player
+
+	old_position := position
+	position_change: rl.Vector2
 
 	switch direction {
 	case .UP:
-		position.y -= f32(texture.height)
-        texture = textures.up
+		position_change = {0, -f32(texture.height)}
+		texture = textures.up
 	case .DOWN:
-		position.y += f32(texture.height)
-        texture = textures.down
+		position_change = {0, f32(texture.height)}
+		texture = textures.down
 	case .LEFT:
-		position.x -= f32(texture.width)
-        texture = textures.left
+		position_change = {-f32(texture.width), 0}
+		texture = textures.left
 	case .RIGHT:
-		position.x += f32(texture.width)
-        texture = textures.right
+		position_change = {f32(texture.width), 0}
+		texture = textures.right
 	case .NEUTRAL:
-        texture = textures.neutral
+		texture = textures.neutral
+	}
+
+	if !is_sprite_present(position + position_change, moveable_sprites) ||
+	   !is_sprite_present(position + position_change * 2, moveable_sprites) {
+        position += position_change
+        apply_pushes(&sprite, old_position, moveable_sprites[:])
 	}
 }
 
 render_player :: proc(player: ^Player) {
-    render_sprite(&player.sprite)
+	render_sprite(&player.sprite)
 }
 
 main :: proc() {
@@ -131,36 +163,36 @@ main :: proc() {
 	floor := new_sprite((1280 - 1024) / 2, 0, assets.floor_texture)
 	resize_sprite(&floor, 1024, 1024)
 
-    player := new_player(512, 512, &assets)
+	player := new_player(512, 512, &assets)
 
-    crates: [5]Sprite = {
-        new_sprite(UNIT_SPRITE_SIZE * 2, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
-        new_sprite(UNIT_SPRITE_SIZE * 3, UNIT_SPRITE_SIZE * 6, assets.crate_texture),
-        new_sprite(UNIT_SPRITE_SIZE * 5, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
-        new_sprite(UNIT_SPRITE_SIZE * 1, UNIT_SPRITE_SIZE * 8, assets.crate_texture),
-        new_sprite(UNIT_SPRITE_SIZE * 4, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
-    }
+	crates: [5]Sprite = {
+		new_sprite(UNIT_SPRITE_SIZE * 2, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
+		new_sprite(UNIT_SPRITE_SIZE * 3, UNIT_SPRITE_SIZE * 6, assets.crate_texture),
+		new_sprite(UNIT_SPRITE_SIZE * 5, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
+		new_sprite(UNIT_SPRITE_SIZE * 1, UNIT_SPRITE_SIZE * 8, assets.crate_texture),
+		new_sprite(UNIT_SPRITE_SIZE * 4, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
+	}
 
-    for &crate in crates {
-        resize_sprite(&crate, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
-    }
+	for &crate in crates {
+		resize_sprite(&crate, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
+	}
 
 
 	for !rl.WindowShouldClose() {
 		if rl.IsKeyPressed(.UP) {
-            move_player(&player, .UP)
+			move_player(&player, .UP, crates[:])
 		}
 
 		if rl.IsKeyPressed(.DOWN) {
-            move_player(&player, .DOWN)
+			move_player(&player, .DOWN, crates[:])
 		}
 
 		if rl.IsKeyPressed(.RIGHT) {
-            move_player(&player, .RIGHT)
+			move_player(&player, .RIGHT, crates[:])
 		}
 
 		if rl.IsKeyPressed(.LEFT) {
-            move_player(&player, .LEFT)
+			move_player(&player, .LEFT, crates[:])
 		}
 
 		rl.BeginDrawing()
@@ -169,9 +201,9 @@ main :: proc() {
 		render_sprite(&floor)
 		render_player(&player)
 
-        for &crate in crates {
-            render_sprite(&crate)
-        }
+		for &crate in crates {
+			render_sprite(&crate)
+		}
 
 		rl.EndDrawing()
 	}
