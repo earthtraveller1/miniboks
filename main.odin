@@ -18,6 +18,12 @@ new_sprite :: proc(x: f32, y: f32, texture: rl.Texture) -> Sprite {
 	return Sprite{position = {x, y}, texture = texture}
 }
 
+new_gridded_sprite :: proc(gridded_x: f32, gridded_y: f32, texture: rl.Texture) -> Sprite {
+	sprite := new_sprite(gridded_x * UNIT_SPRITE_SIZE, gridded_y * UNIT_SPRITE_SIZE, texture)
+	resize_sprite(&sprite, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
+	return sprite
+}
+
 render_sprite :: proc(sprite: ^Sprite) {
 	rl.DrawTextureV(sprite.texture, sprite.position, rl.WHITE)
 }
@@ -28,7 +34,7 @@ resize_sprite :: proc(sprite: ^Sprite, newWidth: i32, newHeight: i32) {
 }
 
 destroy_sprite :: proc(sprite: ^Sprite) {
-    rl.UnloadTexture(sprite.texture)
+	rl.UnloadTexture(sprite.texture)
 }
 
 Assets :: struct {
@@ -39,6 +45,7 @@ Assets :: struct {
 	player_down_texture:  rl.Texture,
 	player_left_texture:  rl.Texture,
 	player_right_texture: rl.Texture,
+	red_marker:           rl.Texture,
 }
 
 load_assets :: proc() -> Assets {
@@ -50,6 +57,7 @@ load_assets :: proc() -> Assets {
 		player_down_texture = rl.LoadTexture("assets/player-down.png"),
 		player_left_texture = rl.LoadTexture("assets/player-left.png"),
 		player_right_texture = rl.LoadTexture("assets/player-right.png"),
+		red_marker = rl.LoadTexture("assets/red-marker.png"),
 	}
 }
 
@@ -62,15 +70,15 @@ Direction :: enum {
 }
 
 Player :: struct {
-	sprite:   Sprite,
-	textures: struct {
+	sprite:    Sprite,
+	textures:  struct {
 		neutral: rl.Texture,
 		up:      rl.Texture,
 		down:    rl.Texture,
 		right:   rl.Texture,
 		left:    rl.Texture,
 	},
-    has_moved: bool
+	has_moved: bool,
 }
 
 new_player :: proc(start_x: f32, start_y: f32, assets: ^Assets) -> Player {
@@ -155,7 +163,7 @@ move_player :: proc(player: ^Player, direction: Direction, moveable_sprites: []S
 		apply_pushes(&sprite, old_position, moveable_sprites[:])
 	}
 
-    player.has_moved = true
+	player.has_moved = true
 }
 
 render_player :: proc(player: ^Player) {
@@ -163,13 +171,13 @@ render_player :: proc(player: ^Player) {
 }
 
 destroy_player :: proc(player: ^Player) {
-    destroy_sprite(&player.sprite)
+	destroy_sprite(&player.sprite)
 
-    rl.UnloadTexture(player.textures.up)
-    rl.UnloadTexture(player.textures.down)
-    rl.UnloadTexture(player.textures.right)
-    rl.UnloadTexture(player.textures.left)
-    rl.UnloadTexture(player.textures.neutral)
+	rl.UnloadTexture(player.textures.up)
+	rl.UnloadTexture(player.textures.down)
+	rl.UnloadTexture(player.textures.right)
+	rl.UnloadTexture(player.textures.left)
+	rl.UnloadTexture(player.textures.neutral)
 }
 
 main :: proc() {
@@ -180,25 +188,38 @@ main :: proc() {
 	assets := load_assets()
 
 	floor := new_sprite((WINDOW_WIDTH - 1024) / 2, 0, assets.floor_texture)
-    defer destroy_sprite(&floor)
+	defer destroy_sprite(&floor)
 	resize_sprite(&floor, 1024, 1024)
 
-	player := new_player(512, 512, &assets)
-    defer destroy_player(&player)
+	player := new_player(
+		(((WINDOW_WIDTH / UNIT_SPRITE_SIZE) - 1) / 2) * UNIT_SPRITE_SIZE,
+		(((WINDOW_HEIGHT / UNIT_SPRITE_SIZE) - 1) / 2) * UNIT_SPRITE_SIZE,
+		&assets,
+	)
+	defer destroy_player(&player)
 
 	crates: [5]Sprite = {
-		new_sprite(UNIT_SPRITE_SIZE * 2, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
-		new_sprite(UNIT_SPRITE_SIZE * 10, UNIT_SPRITE_SIZE * 6, assets.crate_texture),
-		new_sprite(UNIT_SPRITE_SIZE * 5, UNIT_SPRITE_SIZE * 9, assets.crate_texture),
-		new_sprite(UNIT_SPRITE_SIZE * 16, UNIT_SPRITE_SIZE * 8, assets.crate_texture),
-		new_sprite(UNIT_SPRITE_SIZE * 4, UNIT_SPRITE_SIZE * 15, assets.crate_texture),
+		new_gridded_sprite(2, 4, assets.crate_texture),
+		new_gridded_sprite(10, 6, assets.crate_texture),
+		new_gridded_sprite(5, 9, assets.crate_texture),
+		new_gridded_sprite(16, 8, assets.crate_texture),
+		new_gridded_sprite(4, 15, assets.crate_texture),
 	}
-    defer for &crate in crates {
-        destroy_sprite(&crate)
-    }
 
-	for &crate in crates {
-		resize_sprite(&crate, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
+	defer for &crate in crates {
+		destroy_sprite(&crate)
+	}
+
+	targets: [5]Sprite = {
+		new_gridded_sprite(4, 9, assets.red_marker),
+		new_gridded_sprite(6, 14, assets.red_marker),
+		new_gridded_sprite(1, 3, assets.red_marker),
+		new_gridded_sprite(1, 14, assets.red_marker),
+		new_gridded_sprite(8, 3, assets.red_marker),
+	}
+
+	defer for &target in targets {
+		destroy_sprite(&target)
 	}
 
 	camera := rl.Camera2D {
@@ -228,16 +249,22 @@ main :: proc() {
 		rl.BeginDrawing()
 		rl.ClearBackground({165, 126, 85, 255})
 
-        rl.BeginMode2D(camera)
+		rl.BeginMode2D(camera)
 
 		render_sprite(&floor)
 		render_player(&player)
+
+        if !player.has_moved {
+            for &target in targets {
+                render_sprite(&target)
+            }
+        }
 
 		for &crate in crates {
 			render_sprite(&crate)
 		}
 
-        rl.EndMode2D()
+		rl.EndMode2D()
 		rl.EndDrawing()
 	}
 }
