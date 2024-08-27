@@ -1,3 +1,3 @@
-# Game
+# MiniBokS
 
-A small game that still does not have a name
+Small game that involves pushing around boxes into targets.
