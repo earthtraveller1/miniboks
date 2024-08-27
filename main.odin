@@ -27,6 +27,10 @@ resize_sprite :: proc(sprite: ^Sprite, newWidth: i32, newHeight: i32) {
 	sprite.texture.height = newHeight
 }
 
+destroy_sprite :: proc(sprite: ^Sprite) {
+    rl.UnloadTexture(sprite.texture)
+}
+
 Assets :: struct {
 	floor_texture:        rl.Texture,
 	crate_texture:        rl.Texture,
@@ -66,6 +70,7 @@ Player :: struct {
 		right:   rl.Texture,
 		left:    rl.Texture,
 	},
+    has_moved: bool
 }
 
 new_player :: proc(start_x: f32, start_y: f32, assets: ^Assets) -> Player {
@@ -149,10 +154,22 @@ move_player :: proc(player: ^Player, direction: Direction, moveable_sprites: []S
 		position += position_change
 		apply_pushes(&sprite, old_position, moveable_sprites[:])
 	}
+
+    player.has_moved = true
 }
 
 render_player :: proc(player: ^Player) {
 	render_sprite(&player.sprite)
+}
+
+destroy_player :: proc(player: ^Player) {
+    destroy_sprite(&player.sprite)
+
+    rl.UnloadTexture(player.textures.up)
+    rl.UnloadTexture(player.textures.down)
+    rl.UnloadTexture(player.textures.right)
+    rl.UnloadTexture(player.textures.left)
+    rl.UnloadTexture(player.textures.neutral)
 }
 
 main :: proc() {
@@ -163,17 +180,22 @@ main :: proc() {
 	assets := load_assets()
 
 	floor := new_sprite((WINDOW_WIDTH - 1024) / 2, 0, assets.floor_texture)
+    defer destroy_sprite(&floor)
 	resize_sprite(&floor, 1024, 1024)
 
 	player := new_player(512, 512, &assets)
+    defer destroy_player(&player)
 
 	crates: [5]Sprite = {
 		new_sprite(UNIT_SPRITE_SIZE * 2, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
-		new_sprite(UNIT_SPRITE_SIZE * 3, UNIT_SPRITE_SIZE * 6, assets.crate_texture),
-		new_sprite(UNIT_SPRITE_SIZE * 5, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
-		new_sprite(UNIT_SPRITE_SIZE * 1, UNIT_SPRITE_SIZE * 8, assets.crate_texture),
-		new_sprite(UNIT_SPRITE_SIZE * 4, UNIT_SPRITE_SIZE * 4, assets.crate_texture),
+		new_sprite(UNIT_SPRITE_SIZE * 10, UNIT_SPRITE_SIZE * 6, assets.crate_texture),
+		new_sprite(UNIT_SPRITE_SIZE * 5, UNIT_SPRITE_SIZE * 9, assets.crate_texture),
+		new_sprite(UNIT_SPRITE_SIZE * 16, UNIT_SPRITE_SIZE * 8, assets.crate_texture),
+		new_sprite(UNIT_SPRITE_SIZE * 4, UNIT_SPRITE_SIZE * 15, assets.crate_texture),
 	}
+    defer for &crate in crates {
+        destroy_sprite(&crate)
+    }
 
 	for &crate in crates {
 		resize_sprite(&crate, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
