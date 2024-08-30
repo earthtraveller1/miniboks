@@ -46,6 +46,7 @@ Assets :: struct {
 	player_left_texture:  rl.Texture,
 	player_right_texture: rl.Texture,
 	red_marker:           rl.Texture,
+	green_marker:         rl.Texture,
 }
 
 load_assets :: proc() -> Assets {
@@ -58,6 +59,7 @@ load_assets :: proc() -> Assets {
 		player_left_texture = rl.LoadTexture("assets/player-left.png"),
 		player_right_texture = rl.LoadTexture("assets/player-right.png"),
 		red_marker = rl.LoadTexture("assets/red-marker.png"),
+		green_marker = rl.LoadTexture("assets/green-marker.png"),
 	}
 }
 
@@ -222,6 +224,9 @@ main :: proc() {
 		destroy_sprite(&target)
 	}
 
+    final_target := new_gridded_sprite(10, 2, assets.green_marker)
+    defer destroy_sprite(&final_target)
+
 	camera := rl.Camera2D {
 		target   = {0, 0},
 		offset   = {0, 0},
@@ -254,11 +259,13 @@ main :: proc() {
 		render_sprite(&floor)
 		render_player(&player)
 
-        if !player.has_moved {
-            for &target in targets {
-                render_sprite(&target)
-            }
-        }
+		if !player.has_moved {
+			for &target in targets {
+				render_sprite(&target)
+			}
+
+            render_sprite(&final_target)
+		}
 
 		for &crate in crates {
 			render_sprite(&crate)
