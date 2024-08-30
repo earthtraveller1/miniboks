@@ -18,7 +18,9 @@ Assets :: struct {
 	player_left_texture:  rl.Texture,
 	player_right_texture: rl.Texture,
 	red_marker:           rl.Texture,
+	red_cross:            rl.Texture,
 	green_marker:         rl.Texture,
+	green_checkmark:      rl.Texture,
 }
 
 load_assets :: proc() -> Assets {
@@ -31,7 +33,9 @@ load_assets :: proc() -> Assets {
 		player_left_texture = rl.LoadTexture("assets/player-left.png"),
 		player_right_texture = rl.LoadTexture("assets/player-right.png"),
 		red_marker = rl.LoadTexture("assets/red-marker.png"),
+		red_cross = rl.LoadTexture("assets/red-cross.png"),
 		green_marker = rl.LoadTexture("assets/green-marker.png"),
+		green_checkmark = rl.LoadTexture("assets/green-checkmark.png"),
 	}
 }
 
@@ -77,8 +81,8 @@ main :: proc() {
 		destroy_sprite(&target)
 	}
 
-    final_target := new_gridded_sprite(10, 2, assets.green_marker)
-    defer destroy_sprite(&final_target)
+	final_target := new_gridded_sprite(10, 2, assets.green_marker)
+	defer destroy_sprite(&final_target)
 
 	camera := rl.Camera2D {
 		target   = {0, 0},
@@ -86,6 +90,8 @@ main :: proc() {
 		rotation = 0.0,
 		zoom     = 1.0,
 	}
+
+    game_over := false
 
 	for !rl.WindowShouldClose() {
 		if rl.IsKeyPressed(.UP) {
@@ -117,7 +123,7 @@ main :: proc() {
 				render_sprite(&target)
 			}
 
-            render_sprite(&final_target)
+			render_sprite(&final_target)
 		}
 
 		for &crate in crates {
