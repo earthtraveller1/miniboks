@@ -112,13 +112,3 @@ render_player :: proc(player: ^Player) {
 	render_sprite(&player.sprite)
 }
 
-destroy_player :: proc(player: ^Player) {
-	destroy_sprite(&player.sprite)
-
-	rl.UnloadTexture(player.textures.up)
-	rl.UnloadTexture(player.textures.down)
-	rl.UnloadTexture(player.textures.right)
-	rl.UnloadTexture(player.textures.left)
-	rl.UnloadTexture(player.textures.neutral)
-}
-

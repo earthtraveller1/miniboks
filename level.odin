@@ -15,6 +15,5 @@ render_level :: proc(level: ^Level) {
 
 destroy_level :: proc(level: ^Level) {
     delete(level.sprites)
-    destroy_player(&level.player)
 }
 
