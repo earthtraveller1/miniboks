@@ -49,7 +49,6 @@ main :: proc() {
 	assets := load_assets()
 
 	floor := new_sprite((WINDOW_WIDTH - 1024) / 2, 0, assets.floor_texture)
-	defer destroy_sprite(&floor)
 	resize_sprite(&floor, 1024, 1024)
 
 	player := new_player(
@@ -57,7 +56,6 @@ main :: proc() {
 		(((WINDOW_HEIGHT / UNIT_SPRITE_SIZE) - 1) / 2) * UNIT_SPRITE_SIZE,
 		&assets,
 	)
-	defer destroy_player(&player)
 
 	crates: [2]Sprite
 	for &crate in crates {
@@ -66,10 +64,6 @@ main :: proc() {
 			math.floor(rand.float32_range(2, 14)),
 			assets.crate_texture,
 		)
-	}
-
-	defer for &crate in crates {
-		destroy_sprite(&crate)
 	}
 
 	targets: [2]Sprite
@@ -81,12 +75,7 @@ main :: proc() {
 		)
 	}
 
-	defer for &target in targets {
-		destroy_sprite(&target)
-	}
-
 	final_target := new_gridded_sprite(10, 2, assets.green_marker)
-	defer destroy_sprite(&final_target)
 
 	camera := rl.Camera2D {
 		target   = {0, 0},
@@ -98,20 +87,26 @@ main :: proc() {
 	game_over := false
 
 	for !rl.WindowShouldClose() {
-		if rl.IsKeyPressed(.UP) {
-			move_player(&player, .UP, crates[:])
-		}
+		if !game_over {
+			if rl.IsKeyPressed(.UP) {
+				move_player(&player, .UP, crates[:])
+			}
 
-		if rl.IsKeyPressed(.DOWN) {
-			move_player(&player, .DOWN, crates[:])
-		}
+			if rl.IsKeyPressed(.DOWN) {
+				move_player(&player, .DOWN, crates[:])
+			}
 
-		if rl.IsKeyPressed(.RIGHT) {
-			move_player(&player, .RIGHT, crates[:])
-		}
+			if rl.IsKeyPressed(.RIGHT) {
+				move_player(&player, .RIGHT, crates[:])
+			}
 
-		if rl.IsKeyPressed(.LEFT) {
-			move_player(&player, .LEFT, crates[:])
+			if rl.IsKeyPressed(.LEFT) {
+				move_player(&player, .LEFT, crates[:])
+			}
+
+			if player.sprite.position == final_target.position {
+				game_over = true
+			}
 		}
 
 		rl.BeginDrawing()
@@ -132,6 +127,28 @@ main :: proc() {
 
 		for &crate in crates {
 			render_sprite(&crate)
+		}
+
+		if game_over {
+			for crate in crates {
+				at_right_spot := false
+				for target in targets {
+					if crate.position == target.position {
+						at_right_spot = true
+						break
+					}
+				}
+
+				if at_right_spot {
+                    checkmark := new_sprite_v(crate.position, assets.green_checkmark)
+                    resize_sprite(&checkmark, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
+                    render_sprite(&checkmark)
+				} else {
+                    cross := new_sprite_v(crate.position, assets.red_cross)
+                    resize_sprite(&cross, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
+                    render_sprite(&cross)
+				}
+			}
 		}
 
 		rl.EndMode2D()
