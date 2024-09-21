@@ -12,6 +12,7 @@ Direction :: enum {
 
 Player :: struct {
 	sprite:    Sprite,
+    old_position: rl.Vector2,
 	textures:  struct {
 		neutral: rl.Texture,
 		up:      rl.Texture,
@@ -54,11 +55,11 @@ new_player :: proc(start_x: f32, start_y: f32, assets: ^Assets) -> Player {
 	return player
 }
 
-apply_pushes :: proc(sprite: ^Sprite, old_position: rl.Vector2, pushables: []Sprite) {
-	position_delta := old_position - sprite.position
+apply_pushes :: proc(player: ^Player, pushables: []Sprite) {
+	position_delta := player.old_position - player.sprite.position
 
 	for &pushable in pushables {
-		if pushable.position == sprite.position {
+		if pushable.position == player.sprite.position {
 			pushable.position -= position_delta
 		}
 	}
@@ -78,7 +79,7 @@ move_player :: proc(player: ^Player, direction: Direction, moveable_sprites: []S
 	using player.sprite
 	using player
 
-	old_position := position
+	old_position = position
 	position_change: rl.Vector2
 
 	switch direction {
@@ -101,7 +102,7 @@ move_player :: proc(player: ^Player, direction: Direction, moveable_sprites: []S
 	if !is_sprite_present(position + position_change, moveable_sprites) ||
 	   !is_sprite_present(position + position_change * 2, moveable_sprites) {
 		position += position_change
-		apply_pushes(&sprite, old_position, moveable_sprites[:])
+		apply_pushes(player, moveable_sprites[:])
 	}
 
 	player.has_moved = true
