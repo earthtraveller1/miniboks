@@ -14,10 +14,6 @@ render_level :: proc(level: ^Level) {
 }
 
 destroy_level :: proc(level: ^Level) {
-    for &sprite in level.sprites {
-        destroy_sprite(&sprite)
-    }
-
     delete(level.sprites)
     destroy_player(&level.player)
 }
