@@ -1,6 +1,8 @@
 package main
 
 import "core:fmt"
+import "core:math"
+import "core:math/rand"
 import "core:strings"
 
 import rl "vendor:raylib"
@@ -57,24 +59,26 @@ main :: proc() {
 	)
 	defer destroy_player(&player)
 
-	crates: [5]Sprite = {
-		new_gridded_sprite(2, 4, assets.crate_texture),
-		new_gridded_sprite(10, 6, assets.crate_texture),
-		new_gridded_sprite(5, 9, assets.crate_texture),
-		new_gridded_sprite(16, 8, assets.crate_texture),
-		new_gridded_sprite(4, 15, assets.crate_texture),
+	crates: [2]Sprite
+	for &crate in crates {
+		crate = new_gridded_sprite(
+			math.floor(rand.float32_range(2, 14)),
+			math.floor(rand.float32_range(2, 14)),
+			assets.crate_texture,
+		)
 	}
 
 	defer for &crate in crates {
 		destroy_sprite(&crate)
 	}
 
-	targets: [5]Sprite = {
-		new_gridded_sprite(4, 9, assets.red_marker),
-		new_gridded_sprite(6, 14, assets.red_marker),
-		new_gridded_sprite(1, 3, assets.red_marker),
-		new_gridded_sprite(1, 14, assets.red_marker),
-		new_gridded_sprite(8, 3, assets.red_marker),
+	targets: [2]Sprite
+	for &target in targets {
+		target = new_gridded_sprite(
+			math.floor(rand.float32_range(2, 14)),
+			math.floor(rand.float32_range(2, 14)),
+			assets.red_marker,
+		)
 	}
 
 	defer for &target in targets {
@@ -91,7 +95,7 @@ main :: proc() {
 		zoom     = 1.0,
 	}
 
-    game_over := false
+	game_over := false
 
 	for !rl.WindowShouldClose() {
 		if rl.IsKeyPressed(.UP) {
