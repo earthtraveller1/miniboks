@@ -11,16 +11,17 @@ Direction :: enum {
 }
 
 Player :: struct {
-	sprite:    Sprite,
-    old_position: rl.Vector2,
-	textures:  struct {
+	sprite:            Sprite,
+	old_position:      rl.Vector2,
+	position_progress: f32,
+	textures:          struct {
 		neutral: rl.Texture,
 		up:      rl.Texture,
 		down:    rl.Texture,
 		right:   rl.Texture,
 		left:    rl.Texture,
 	},
-	has_moved: bool,
+	has_moved:         bool,
 }
 
 new_player :: proc(start_x: f32, start_y: f32, assets: ^Assets) -> Player {
@@ -32,6 +33,8 @@ new_player :: proc(start_x: f32, start_y: f32, assets: ^Assets) -> Player {
 
 	player := Player {
 		sprite = sprite,
+        old_position = sprite.position,
+        position_progress = 1.0,
 		textures = {
 			neutral = assets.player_texture,
 			up = assets.player_up_texture,
@@ -106,9 +109,31 @@ move_player :: proc(player: ^Player, direction: Direction, moveable_sprites: []S
 	}
 
 	player.has_moved = true
+    player.position_progress = 0.0
+}
+
+interpolate_quad :: proc(a: f32, b: f32, m: f32) -> f32 {
+	return a + (b - a) * m * m
 }
 
 render_player :: proc(player: ^Player) {
-	render_sprite(&player.sprite)
-}
+	progress_sprite := player.sprite
 
+	progress_sprite.position.x = interpolate_quad(
+		player.old_position.x,
+		progress_sprite.position.x,
+		player.position_progress,
+	)
+
+	progress_sprite.position.y = interpolate_quad(
+		player.old_position.y,
+		progress_sprite.position.y,
+		player.position_progress,
+	)
+
+    if player.position_progress < 1.0 {
+        player.position_progress += rl.GetFrameTime()*10.0
+    }
+
+	render_sprite(&progress_sprite)
+}
