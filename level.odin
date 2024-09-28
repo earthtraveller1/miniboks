@@ -11,6 +11,7 @@ Level :: struct {
 	game_over:    bool,
 	final_target: Sprite,
 	player:       Player,
+    has_won: bool,
 }
 
 new_level :: proc(crate_count: u32, assets: ^Assets) -> Level {
@@ -91,6 +92,8 @@ render_level :: proc(level: ^Level, assets: ^Assets) {
 	}
 
 	if level.game_over {
+        level.has_won = true
+
 		for crate in level.crates {
 			at_right_spot := false
 			for target in level.targets {
@@ -108,6 +111,8 @@ render_level :: proc(level: ^Level, assets: ^Assets) {
 				cross := new_sprite_v(crate.position, assets.red_cross)
 				resize_sprite(&cross, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
 				render_sprite(&cross)
+                
+                level.has_won = false
 			}
 		}
 	}

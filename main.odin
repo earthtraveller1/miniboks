@@ -51,10 +51,26 @@ main :: proc() {
 	floor := new_sprite((WINDOW_WIDTH - 1024) / 2, 0, assets.floor_texture)
 	resize_sprite(&floor, 1024, 1024)
 
-    level := new_level(2, &assets)
+    level_crate_count: u32 = 1
+    next_level_timer: f32 = 3.0
+
+    level := new_level(level_crate_count, &assets)
 
 	for !rl.WindowShouldClose() {
         update_level(&level)
+
+        if level.game_over {
+            next_level_timer -= rl.GetFrameTime()
+
+            if next_level_timer <= 0.0 {
+                if level.has_won {
+                    level_crate_count += 1
+                }
+
+                level = new_level(level_crate_count, &assets)
+                next_level_timer = 3.0
+            }
+        }
 
 		rl.BeginDrawing()
 		rl.ClearBackground({165, 126, 85, 255})
