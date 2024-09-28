@@ -88,7 +88,7 @@ render_level :: proc(level: ^Level, assets: ^Assets) {
 	}
 
 	for &crate in level.crates {
-		render_sprite(&crate)
+		render_sprite_animated(&crate, UNIT_ANIMATION_SPEED)
 	}
 
 	if level.game_over {

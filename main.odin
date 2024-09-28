@@ -8,6 +8,7 @@ import "core:strings"
 import rl "vendor:raylib"
 
 UNIT_SPRITE_SIZE :: 64
+UNIT_ANIMATION_SPEED :: 10
 WINDOW_WIDTH :: 1280
 WINDOW_HEIGHT :: 1024
 

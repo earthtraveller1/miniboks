@@ -3,8 +3,10 @@ package main
 import rl "vendor:raylib"
 
 Sprite :: struct {
-	position: rl.Vector2,
-	texture:  rl.Texture,
+	position:           rl.Vector2,
+	old_position:       rl.Vector2,
+	animation_progress: f32,
+	texture:            rl.Texture,
 }
 
 new_sprite :: proc(x: f32, y: f32, texture: rl.Texture) -> Sprite {
@@ -12,7 +14,7 @@ new_sprite :: proc(x: f32, y: f32, texture: rl.Texture) -> Sprite {
 }
 
 new_sprite_v :: proc(position: rl.Vector2, texture: rl.Texture) -> Sprite {
-    return new_sprite(position.x, position.y, texture)
+	return new_sprite(position.x, position.y, texture)
 }
 
 new_gridded_sprite :: proc(gridded_x: f32, gridded_y: f32, texture: rl.Texture) -> Sprite {
@@ -27,6 +29,19 @@ new_gridded_sprite_v :: proc(gridded_position: rl.Vector2, texture: rl.Texture) 
 
 render_sprite :: proc(sprite: ^Sprite) {
 	rl.DrawTextureV(sprite.texture, sprite.position, rl.WHITE)
+}
+
+render_sprite_animated :: proc(sprite: ^Sprite, speed: f32) {
+	animated_position := rl.Vector2 {
+		interpolate_quad(sprite.old_position.x, sprite.position.x, sprite.animation_progress),
+		interpolate_quad(sprite.old_position.y, sprite.position.y, sprite.animation_progress),
+	}
+
+    if sprite.animation_progress < 1.0 {
+        sprite.animation_progress += rl.GetFrameTime() * speed
+    }
+
+    rl.DrawTextureV(sprite.texture, animated_position, rl.WHITE)
 }
 
 resize_sprite :: proc(sprite: ^Sprite, newWidth: i32, newHeight: i32) {
