@@ -10,7 +10,7 @@ Sprite :: struct {
 }
 
 new_sprite :: proc(x: f32, y: f32, texture: rl.Texture) -> Sprite {
-	return Sprite{position = {x, y}, texture = texture}
+	return Sprite{position = {x, y}, old_position = {x, y}, texture = texture}
 }
 
 new_sprite_v :: proc(position: rl.Vector2, texture: rl.Texture) -> Sprite {

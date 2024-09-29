@@ -23,10 +23,7 @@ Player :: struct {
 }
 
 new_player :: proc(start_x: f32, start_y: f32, assets: ^Assets) -> Player {
-	sprite := Sprite {
-		position = {start_x, start_y},
-		texture  = assets.player_texture,
-	}
+	sprite := new_sprite(start_x, start_y, assets.player_texture)
 	resize_sprite(&sprite, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
 
 	player := Player {
