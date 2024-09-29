@@ -43,7 +43,7 @@ load_assets :: proc() -> Assets {
 }
 
 main :: proc() {
-	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Game")
+	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "MiniBoks")
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
