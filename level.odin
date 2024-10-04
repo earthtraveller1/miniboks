@@ -11,7 +11,7 @@ Level :: struct {
 	game_over:    bool,
 	final_target: Sprite,
 	player:       Player,
-    has_won: bool,
+	has_won:      bool,
 }
 
 new_level :: proc(crate_count: u32, assets: ^Assets) -> Level {
@@ -27,26 +27,51 @@ new_level :: proc(crate_count: u32, assets: ^Assets) -> Level {
 		assets,
 	)
 
-    level.game_over = false
+	level.game_over = false
 
 	for i in 0 ..< crate_count {
-		append(
-			&level.targets,
-			new_gridded_sprite(
-				math.floor(rand.float32_range(2, 14)),
-				math.floor(rand.float32_range(2, 14)),
-				assets.red_marker,
-			),
-		)
+		target_x := math.floor(rand.float32_range(2, 14))
+		target_y := math.floor(rand.float32_range(2, 14))
 
-		append(
-			&level.crates,
-			new_gridded_sprite(
-				math.floor(rand.float32_range(2, 14)),
-				math.floor(rand.float32_range(2, 14)),
-				assets.crate_texture,
-			),
-		)
+		for {
+			already_exists := false
+
+			for target in level.targets {
+				if target.position.x == target_x && target.position.y == target_y {
+					already_exists = true
+				}
+			}
+
+			if already_exists {
+				target_x = math.floor(rand.float32_range(2, 14))
+				target_y = math.floor(rand.float32_range(2, 14))
+			} else {
+				break
+			}
+		}
+
+		crate_x := math.floor(rand.float32_range(2, 14))
+		crate_y := math.floor(rand.float32_range(2, 14))
+
+		for {
+			already_exists := false
+
+			for crate in level.crates {
+				if crate.position.x == crate_x && crate.position.y == crate_y {
+					already_exists = true
+				}
+			}
+
+			if already_exists {
+				crate_x = math.floor(rand.float32_range(2, 14))
+				crate_y = math.floor(rand.float32_range(2, 14))
+			} else {
+				break
+			}
+		}
+
+		append(&level.targets, new_gridded_sprite(target_x, target_y, assets.red_marker))
+		append(&level.crates, new_gridded_sprite(crate_x, crate_y, assets.crate_texture))
 	}
 
 	return level
@@ -92,7 +117,7 @@ render_level :: proc(level: ^Level, assets: ^Assets) {
 	}
 
 	if level.game_over {
-        level.has_won = true
+		level.has_won = true
 
 		for crate in level.crates {
 			at_right_spot := false
@@ -111,8 +136,8 @@ render_level :: proc(level: ^Level, assets: ^Assets) {
 				cross := new_sprite_v(crate.position, assets.red_cross)
 				resize_sprite(&cross, UNIT_SPRITE_SIZE, UNIT_SPRITE_SIZE)
 				render_sprite(&cross)
-                
-                level.has_won = false
+
+				level.has_won = false
 			}
 		}
 	}
