@@ -52,6 +52,14 @@ main :: proc() {
 	floor := new_sprite((WINDOW_WIDTH - 1024) / 2, 0, assets.floor_texture)
 	resize_sprite(&floor, 1024, 1024)
 
+    rl.InitAudioDevice()
+    defer rl.CloseAudioDevice()
+
+    main_music := rl.LoadMusicStream("assets/mainmenu.ogg")
+    defer rl.UnloadMusicStream(main_music)
+
+    rl.PlayMusicStream(main_music)
+
     level_crate_count: u32 = 1
     next_level_timer: f32 = 3.0
 
@@ -72,6 +80,8 @@ main :: proc() {
                 next_level_timer = 3.0
             }
         }
+
+        rl.UpdateMusicStream(main_music)
 
 		rl.BeginDrawing()
 		rl.ClearBackground({165, 126, 85, 255})
