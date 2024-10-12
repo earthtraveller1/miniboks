@@ -1,7 +1,9 @@
 package main
 
+import "core:fmt"
 import "core:math"
 import "core:math/rand"
+import "core:strings"
 
 import rl "vendor:raylib"
 
@@ -12,6 +14,7 @@ Level :: struct {
 	final_target: Sprite,
 	player:       Player,
 	has_won:      bool,
+	timer:        f32,
 }
 
 new_level :: proc(crate_count: u32, assets: ^Assets) -> Level {
@@ -28,6 +31,7 @@ new_level :: proc(crate_count: u32, assets: ^Assets) -> Level {
 	)
 
 	level.game_over = false
+    level.timer = 0
 
 	for i in 0 ..< crate_count {
 		target_x := math.floor(rand.float32_range(2, 14))
@@ -98,6 +102,8 @@ update_level :: proc(level: ^Level) {
 		if level.player.sprite.position == level.final_target.position {
 			level.game_over = true
 		}
+
+        level.timer += rl.GetFrameTime()
 	}
 }
 
@@ -141,6 +147,17 @@ render_level :: proc(level: ^Level, assets: ^Assets) {
 			}
 		}
 	}
+
+	time := level.timer
+	minutes := math.floor(time / 60)
+	seconds := i32(time) % 60
+
+	builder := strings.Builder{}
+	defer strings.builder_destroy(&builder)
+	fmt.sbprintf(&builder, "%d:%2d", i32(minutes), i32(seconds))
+
+	text_width := rl.MeasureText(strings.to_cstring(&builder), 64)
+	rl.DrawText(strings.to_cstring(&builder), (WINDOW_WIDTH - text_width) / 2, 8, 64, rl.WHITE)
 }
 
 destroy_level :: proc(level: ^Level) {
