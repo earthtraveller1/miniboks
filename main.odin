@@ -42,12 +42,27 @@ load_assets :: proc() -> Assets {
 	}
 }
 
+unload_assets :: proc(assets: ^Assets) {
+	rl.UnloadTexture(assets.floor_texture)
+	rl.UnloadTexture(assets.crate_texture)
+	rl.UnloadTexture(assets.player_texture)
+	rl.UnloadTexture(assets.player_up_texture)
+	rl.UnloadTexture(assets.player_down_texture)
+	rl.UnloadTexture(assets.player_left_texture)
+	rl.UnloadTexture(assets.player_right_texture)
+	rl.UnloadTexture(assets.red_marker)
+	rl.UnloadTexture(assets.red_cross)
+	rl.UnloadTexture(assets.green_marker)
+	rl.UnloadTexture(assets.green_checkmark)
+}
+
 main :: proc() {
 	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "MiniBoks")
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
 	assets := load_assets()
+    defer unload_assets(&assets)
 
 	floor := new_sprite((WINDOW_WIDTH - 1024) / 2, 0, assets.floor_texture)
 	resize_sprite(&floor, 1024, 1024)
