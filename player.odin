@@ -112,5 +112,5 @@ interpolate_quad :: proc(a: f32, b: f32, m: f32) -> f32 {
 }
 
 render_player :: proc(player: ^Player) {
-	render_sprite_animated(&player.sprite, UNIT_ANIMATION_SPEED)
+	render_sprite_animated_position(&player.sprite, UNIT_ANIMATION_SPEED)
 }

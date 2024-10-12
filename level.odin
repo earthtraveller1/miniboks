@@ -112,14 +112,22 @@ render_level :: proc(level: ^Level, assets: ^Assets) {
 
 	if !level.player.has_moved {
 		for &target in level.targets {
-			render_sprite(&target)
+			render_sprite_animated_opacity(&target, 1.0)
+            if target.animation_progress >= 1.0 {
+                target.animation_progress = 0.0
+                if target.animation_phase == 1 {
+                    target.animation_phase = 0
+                } else {
+                    target.animation_phase = 1
+                }
+            }
 		}
 
 		render_sprite(&level.final_target)
 	}
 
 	for &crate in level.crates {
-		render_sprite_animated(&crate, UNIT_ANIMATION_SPEED)
+		render_sprite_animated_position(&crate, UNIT_ANIMATION_SPEED)
 	}
 
 	if level.game_over {

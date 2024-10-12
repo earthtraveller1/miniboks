@@ -1,11 +1,13 @@
 package main
 
+import "core:fmt"
 import rl "vendor:raylib"
 
 Sprite :: struct {
 	position:           rl.Vector2,
 	old_position:       rl.Vector2,
 	animation_progress: f32,
+	animation_phase:    u32,
 	texture:            rl.Texture,
 }
 
@@ -31,17 +33,36 @@ render_sprite :: proc(sprite: ^Sprite) {
 	rl.DrawTextureV(sprite.texture, sprite.position, rl.WHITE)
 }
 
-render_sprite_animated :: proc(sprite: ^Sprite, speed: f32) {
+render_sprite_animated_position :: proc(sprite: ^Sprite, speed: f32) {
 	animated_position := rl.Vector2 {
 		interpolate_quad(sprite.old_position.x, sprite.position.x, sprite.animation_progress),
 		interpolate_quad(sprite.old_position.y, sprite.position.y, sprite.animation_progress),
 	}
 
-    if sprite.animation_progress < 1.0 {
-        sprite.animation_progress += rl.GetFrameTime() * speed
+	if sprite.animation_progress < 1.0 {
+		sprite.animation_progress += rl.GetFrameTime() * speed
+	}
+
+	rl.DrawTextureV(sprite.texture, animated_position, rl.WHITE)
+}
+
+render_sprite_animated_opacity :: proc(sprite: ^Sprite, speed: f32) {
+    LOWER_OPACITY :: 64
+    UPPER_OPACITY :: 255
+
+    animated_opacity: f32
+    if sprite.animation_phase == 0 {
+        animated_opacity = interpolate_quad(LOWER_OPACITY, UPPER_OPACITY, sprite.animation_progress)
+    } else if sprite.animation_phase == 1 {
+        animated_opacity = interpolate_quad(UPPER_OPACITY, LOWER_OPACITY, sprite.animation_progress)
     }
 
-    rl.DrawTextureV(sprite.texture, animated_position, rl.WHITE)
+	if sprite.animation_progress < 1.0 {
+		sprite.animation_progress += rl.GetFrameTime() * speed
+	}
+
+	tint := rl.Color{255, 255, 255, u8(animated_opacity)}
+	rl.DrawTextureV(sprite.texture, sprite.position, tint)
 }
 
 resize_sprite :: proc(sprite: ^Sprite, newWidth: i32, newHeight: i32) {
