@@ -33,6 +33,14 @@ render_sprite :: proc(sprite: ^Sprite) {
 	rl.DrawTextureV(sprite.texture, sprite.position, rl.WHITE)
 }
 
+render_sprite_at_offset :: proc(sprite: ^Sprite, x_offset: f32, y_offset: f32) {
+	rl.DrawTextureV(sprite.texture, sprite.position + {x_offset, y_offset}, rl.WHITE)
+}
+
+render_sprite_at_offset_v :: proc(sprite: ^Sprite, offset: rl.Vector2) {
+	rl.DrawTextureV(sprite.texture, sprite.position + offset, rl.WHITE)
+}
+
 render_sprite_animated_position :: proc(sprite: ^Sprite, speed: f32) {
 	animated_position := rl.Vector2 {
 		interpolate_quad(sprite.old_position.x, sprite.position.x, sprite.animation_progress),
@@ -69,3 +77,4 @@ resize_sprite :: proc(sprite: ^Sprite, newWidth: i32, newHeight: i32) {
 	sprite.texture.width = newWidth
 	sprite.texture.height = newHeight
 }
+
