@@ -57,27 +57,42 @@ unload_assets :: proc(assets: ^Assets) {
 }
 
 render_main_menu :: proc() {
-	rl.DrawText("PLAY", 256, WINDOW_HEIGHT - 256, 256, rl.WHITE)
+    FONT_SIZE :: 128
+	text_width := rl.MeasureText("PLAY", FONT_SIZE)
+
+	rectangle := rl.Rectangle {
+		x      = FONT_SIZE,
+		y      = 512,
+		width  = f32(text_width),
+		height = FONT_SIZE,
+	}
+
+	color: rl.Color
+	if is_cursor_within_rect(rectangle) {
+		color = rl.WHITE
+	} else {
+		color = rl.GetColor(0xAAAAAAAA)
+	}
+
+	// rl.DrawRectangleRec(rectangle, color)
+	rl.DrawText("PLAY", FONT_SIZE, 512, FONT_SIZE, color)
+}
+
+is_cursor_within_rect :: proc(rect: rl.Rectangle) -> bool {
+	mouse := rl.GetMousePosition()
+
+	left_bound := rect.x
+	right_bound := rect.x + rect.width
+	upper_bound := rect.y
+	lower_bound := rect.y + rect.height
+
+	within_x_bound := mouse.x >= left_bound && mouse.x <= right_bound
+	within_y_bound := mouse.y >= upper_bound && mouse.y <= lower_bound
+
+	return within_x_bound && within_y_bound
 }
 
 update_main_menu :: proc() -> bool {
-	mouse := rl.GetMousePosition()
-	text_width := rl.MeasureText("PLAY", 256)
-
-	left_bound: f32 = 256
-	right_bound: f32 = 256 + f32(text_width)
-	within_x_bound := left_bound <= mouse.x && mouse.x <= right_bound
-
-	fmt.println("mouse x: ", mouse.x, ", mouse y: ", mouse.y)
-
-	upper_bound: f32 = WINDOW_HEIGHT - 512
-	lower_bound: f32 = WINDOW_HEIGHT - 256
-	within_y_bound := upper_bound <= mouse.x && mouse.y <= lower_bound
-
-	if within_x_bound && within_y_bound {
-		return rl.IsMouseButtonDown(.LEFT)
-	}
-
 	return false
 }
 
@@ -99,7 +114,7 @@ new_game_scene :: proc(assets: ^Assets) -> GameScene {
 
 	return GameScene {
 		floor = floor,
-        level = level,
+		level = level,
 		level_crate_count = level_crate_count,
 		next_level_timer = next_level_timer,
 	}
@@ -150,21 +165,21 @@ main :: proc() {
 	rl.PlayMusicStream(main_music)
 
 	at_main_menu := true
-    game_scene := new_game_scene(&assets)
+	game_scene := new_game_scene(&assets)
 
 	for !rl.WindowShouldClose() {
 		rl.UpdateMusicStream(main_music)
 
 		if !at_main_menu {
-            update_game_scene(&game_scene, &assets)
+			update_game_scene(&game_scene, &assets)
 		} else {
 			if update_main_menu() {
 				at_main_menu = false
 			}
 
-            rl.BeginDrawing()
+			rl.BeginDrawing()
 			render_main_menu()
-            rl.EndDrawing()
+			rl.EndDrawing()
 		}
 	}
 }
