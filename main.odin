@@ -56,53 +56,89 @@ unload_assets :: proc(assets: ^Assets) {
 	rl.UnloadTexture(assets.green_checkmark)
 }
 
+render_main_menu :: proc() {
+	rl.DrawText("PLAY", 256, WINDOW_HEIGHT - 256, 256, rl.WHITE)
+}
+
+update_main_menu :: proc() -> bool {
+	mouse := rl.GetMousePosition()
+	text_width := rl.MeasureText("PLAY", 256)
+
+	left_bound: f32 = 256
+	right_bound: f32 = 256 + f32(text_width)
+	within_x_bound := left_bound <= mouse.x && mouse.x <= right_bound
+
+	upper_bound: f32 = WINDOW_HEIGHT - 512
+	lower_bound: f32 = WINDOW_HEIGHT - 256
+	within_y_bound := upper_bound <= mouse.x && mouse.y <= lower_bound
+
+	if within_x_bound && within_y_bound {
+		return rl.IsMouseButtonDown(.LEFT)
+	}
+
+	return false
+}
+
 main :: proc() {
 	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "MiniBoks")
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
 	assets := load_assets()
-    defer unload_assets(&assets)
+	defer unload_assets(&assets)
 
 	floor := new_sprite((WINDOW_WIDTH - 1024) / 2, 0, assets.floor_texture)
 	resize_sprite(&floor, 1024, 1024)
 
-    rl.InitAudioDevice()
-    defer rl.CloseAudioDevice()
+	rl.InitAudioDevice()
+	defer rl.CloseAudioDevice()
 
-    main_music := rl.LoadMusicStream("assets/mainmenu.ogg")
-    defer rl.UnloadMusicStream(main_music)
+	main_music := rl.LoadMusicStream("assets/mainmenu.ogg")
+	defer rl.UnloadMusicStream(main_music)
 
-    rl.PlayMusicStream(main_music)
+	rl.PlayMusicStream(main_music)
 
-    level_crate_count: u32 = 1
-    next_level_timer: f32 = 3.0
+	level_crate_count: u32 = 1
+	next_level_timer: f32 = 3.0
 
-    level := new_level(level_crate_count, &assets)
+	at_main_menu := true
+
+	level := new_level(level_crate_count, &assets)
 
 	for !rl.WindowShouldClose() {
-        update_level(&level)
+		if !at_main_menu {
+			update_level(&level)
 
-        if level.game_over {
-            next_level_timer -= rl.GetFrameTime()
+			if level.game_over {
+				next_level_timer -= rl.GetFrameTime()
 
-            if next_level_timer <= 0.0 {
-                if level.has_won {
-                    level_crate_count += 1
-                }
+				if next_level_timer <= 0.0 {
+					if level.has_won {
+						level_crate_count += 1
+					}
 
-                level = new_level(level_crate_count, &assets)
-                next_level_timer = 3.0
+					level = new_level(level_crate_count, &assets)
+					next_level_timer = 3.0
+				}
+			}
+
+		} else {
+			if update_main_menu() {
+                at_main_menu = false
             }
-        }
+		}
 
-        rl.UpdateMusicStream(main_music)
+		rl.UpdateMusicStream(main_music)
 
 		rl.BeginDrawing()
 		rl.ClearBackground({165, 126, 85, 255})
 
-        render_sprite(&floor)
-        render_level(&level, &assets)
+		if !at_main_menu {
+			render_sprite(&floor)
+			render_level(&level, &assets)
+		} else {
+            render_main_menu()
+        }
 
 		rl.EndDrawing()
 	}
