@@ -56,26 +56,42 @@ unload_assets :: proc(assets: ^Assets) {
 	rl.UnloadTexture(assets.green_checkmark)
 }
 
-render_main_menu :: proc() {
-    FONT_SIZE :: 128
-	text_width := rl.MeasureText("PLAY", FONT_SIZE)
 
-	rectangle := rl.Rectangle {
-		x      = FONT_SIZE,
-		y      = 512,
-		width  = f32(text_width),
-		height = FONT_SIZE,
+MAIN_MENU_FONT_SIZE :: 128
+
+MainMenu :: struct {
+	play_button_rectangle: rl.Rectangle,
+}
+
+new_main_menu :: proc() -> MainMenu {
+	text_width := rl.MeasureText("PLAY", MAIN_MENU_FONT_SIZE)
+
+	return MainMenu {
+		play_button_rectangle = rl.Rectangle {
+			x = 128,
+			y = 512,
+			width = f32(text_width),
+			height = MAIN_MENU_FONT_SIZE,
+		},
 	}
+}
 
+render_main_menu :: proc(main_menu: ^MainMenu) {
 	color: rl.Color
-	if is_cursor_within_rect(rectangle) {
+	if is_cursor_within_rect(main_menu.play_button_rectangle) {
 		color = rl.WHITE
 	} else {
 		color = rl.GetColor(0xAAAAAAAA)
 	}
 
 	// rl.DrawRectangleRec(rectangle, color)
-	rl.DrawText("PLAY", FONT_SIZE, 512, FONT_SIZE, color)
+	rl.DrawText(
+		"PLAY",
+		i32(main_menu.play_button_rectangle.x),
+		i32(main_menu.play_button_rectangle.y),
+		MAIN_MENU_FONT_SIZE,
+		color,
+	)
 }
 
 is_cursor_within_rect :: proc(rect: rl.Rectangle) -> bool {
@@ -92,8 +108,12 @@ is_cursor_within_rect :: proc(rect: rl.Rectangle) -> bool {
 	return within_x_bound && within_y_bound
 }
 
-update_main_menu :: proc() -> bool {
-	return false
+update_main_menu :: proc(main_menu: ^MainMenu) -> bool {
+    if is_cursor_within_rect(main_menu.play_button_rectangle) {
+        return rl.IsMouseButtonReleased(.LEFT)
+    } else {
+        return false
+    }
 }
 
 GameScene :: struct {
@@ -166,6 +186,7 @@ main :: proc() {
 
 	at_main_menu := true
 	game_scene := new_game_scene(&assets)
+    main_menu := new_main_menu()
 
 	for !rl.WindowShouldClose() {
 		rl.UpdateMusicStream(main_music)
@@ -173,12 +194,12 @@ main :: proc() {
 		if !at_main_menu {
 			update_game_scene(&game_scene, &assets)
 		} else {
-			if update_main_menu() {
+			if update_main_menu(&main_menu) {
 				at_main_menu = false
 			}
 
 			rl.BeginDrawing()
-			render_main_menu()
+			render_main_menu(&main_menu)
 			rl.EndDrawing()
 		}
 	}
