@@ -109,7 +109,7 @@ render_main_menu :: proc(main_menu: ^MainMenu) {
 
     mouse_position := rl.GetMousePosition()
 
-    render_sprite_at_offset_v(&main_menu.crate_element, -mouse_position * 0.05)
+    render_sprite_at_offset_v(&main_menu.crate_element, mouse_position * 0.05)
     render_sprite_at_offset_v(&main_menu.player_element, -mouse_position * 0.1)
 
     rl.EndDrawing()
