@@ -61,10 +61,16 @@ MAIN_MENU_FONT_SIZE :: 128
 
 MainMenu :: struct {
 	play_button_rectangle: rl.Rectangle,
+    player_element: Sprite,
+    crate_element: Sprite
 }
 
-new_main_menu :: proc() -> MainMenu {
+new_main_menu :: proc(assets: ^Assets) -> MainMenu {
 	text_width := rl.MeasureText("PLAY", MAIN_MENU_FONT_SIZE)
+    player_element := new_sprite(650, 512, assets.player_texture)
+    resize_sprite(&player_element, 400, 400)
+    crate_element := new_sprite(800, 140, assets.crate_texture)
+    resize_sprite(&crate_element, 300, 300)
 
 	return MainMenu {
 		play_button_rectangle = rl.Rectangle {
@@ -73,16 +79,22 @@ new_main_menu :: proc() -> MainMenu {
 			width = f32(text_width),
 			height = MAIN_MENU_FONT_SIZE,
 		},
+        player_element = player_element,
+        crate_element = crate_element,
 	}
 }
 
 render_main_menu :: proc(main_menu: ^MainMenu) {
+    rl.BeginDrawing()
+    
 	color: rl.Color
 	if is_cursor_within_rect(main_menu.play_button_rectangle) {
 		color = rl.WHITE
 	} else {
 		color = rl.GetColor(0xAAAAAAAA)
 	}
+
+	rl.ClearBackground({165, 126, 85, 255})
 
 	// rl.DrawRectangleRec(rectangle, color)
 	rl.DrawText(
@@ -92,6 +104,13 @@ render_main_menu :: proc(main_menu: ^MainMenu) {
 		MAIN_MENU_FONT_SIZE,
 		color,
 	)
+
+    rl.DrawText("MiniBoks", 128, 128, 128, rl.LIGHTGRAY)
+
+    render_sprite(&main_menu.crate_element)
+    render_sprite(&main_menu.player_element)
+
+    rl.EndDrawing()
 }
 
 is_cursor_within_rect :: proc(rect: rl.Rectangle) -> bool {
@@ -186,7 +205,7 @@ main :: proc() {
 
 	at_main_menu := true
 	game_scene := new_game_scene(&assets)
-    main_menu := new_main_menu()
+    main_menu := new_main_menu(&assets)
 
 	for !rl.WindowShouldClose() {
 		rl.UpdateMusicStream(main_music)
@@ -198,9 +217,7 @@ main :: proc() {
 				at_main_menu = false
 			}
 
-			rl.BeginDrawing()
 			render_main_menu(&main_menu)
-			rl.EndDrawing()
 		}
 	}
 }
