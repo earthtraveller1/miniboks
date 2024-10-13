@@ -31,7 +31,7 @@ new_level :: proc(crate_count: u32, assets: ^Assets) -> Level {
 	)
 
 	level.game_over = false
-    level.timer = 0
+	level.timer = 0
 
 	for i in 0 ..< crate_count {
 		target_x := math.floor(rand.float32_range(2, 14))
@@ -44,6 +44,11 @@ new_level :: proc(crate_count: u32, assets: ^Assets) -> Level {
 				if target.position.x == target_x && target.position.y == target_y {
 					already_exists = true
 				}
+			}
+
+			if target_x == level.final_target.position.x &&
+			   target_y == level.final_target.position.y {
+				already_exists = true
 			}
 
 			if already_exists {
@@ -64,6 +69,11 @@ new_level :: proc(crate_count: u32, assets: ^Assets) -> Level {
 				if crate.position.x == crate_x && crate.position.y == crate_y {
 					already_exists = true
 				}
+			}
+
+			if crate_x == level.final_target.position.x &&
+			   crate_y == level.final_target.position.y {
+				already_exists = true
 			}
 
 			if already_exists {
@@ -103,7 +113,7 @@ update_level :: proc(level: ^Level) {
 			level.game_over = true
 		}
 
-        level.timer += rl.GetFrameTime()
+		level.timer += rl.GetFrameTime()
 	}
 }
 
@@ -113,18 +123,18 @@ render_level :: proc(level: ^Level, assets: ^Assets) {
 	if !level.player.has_moved {
 		for &target in level.targets {
 			render_sprite_animated_opacity(&target, 1.0)
-            if target.animation_progress >= 1.0 {
-                target.animation_progress = 0.0
-                if target.animation_phase == 1 {
-                    target.animation_phase = 0
-                } else {
-                    target.animation_phase = 1
-                }
-            }
+			if target.animation_progress >= 1.0 {
+				target.animation_progress = 0.0
+				if target.animation_phase == 1 {
+					target.animation_phase = 0
+				} else {
+					target.animation_phase = 1
+				}
+			}
 		}
-
-		render_sprite(&level.final_target)
 	}
+
+	render_sprite(&level.final_target)
 
 	for &crate in level.crates {
 		render_sprite_animated_position(&crate, UNIT_ANIMATION_SPEED)
