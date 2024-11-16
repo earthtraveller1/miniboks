@@ -120,15 +120,24 @@ update_level :: proc(level: ^Level) {
 render_level :: proc(level: ^Level, assets: ^Assets) {
 	render_player(&level.player)
 
-	if !level.player.has_moved {
+	if !level.player.has_moved || level.game_over {
 		for &target in level.targets {
-			render_sprite_animated_opacity(&target, 1.0)
-			if target.animation_progress >= 1.0 {
-				target.animation_progress = 0.0
-				if target.animation_phase == 1 {
-					target.animation_phase = 0
-				} else {
-					target.animation_phase = 1
+			crate_at_target := false
+			for crate in level.crates {
+				if crate.position == target.position {
+					crate_at_target = true
+				}
+			}
+
+			if !crate_at_target {
+				render_sprite_animated_opacity(&target, 1.0)
+				if target.animation_progress >= 1.0 {
+					target.animation_progress = 0.0
+					if target.animation_phase == 1 {
+						target.animation_phase = 0
+					} else {
+						target.animation_phase = 1
+					}
 				}
 			}
 		}
